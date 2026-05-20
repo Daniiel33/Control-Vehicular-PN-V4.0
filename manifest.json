@@ -1,0 +1,40 @@
+{
+  "name": "Control Vehicular — Papeles Nacionales S.A.S.",
+  "short_name": "Ctrl Vehicular",
+  "description": "Sistema de Control de Acceso Vehicular",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1a6b1e",
+  "orientation": "portrait-primary",
+  "lang": "es-CO",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Registro rápido",
+      "short_name": "Registro",
+      "description": "Abrir formulario de registro",
+      "url": "./"
+    }
+  ]
+}
