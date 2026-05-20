@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="90" fill="#004d26"/>
+  <rect width="512" height="220" rx="0" fill="#006633"/>
+  <rect width="512" height="140" rx="90" fill="#006633"/>
+
+
+  <text x="256" y="165" font-family="Arial Black,Arial" font-size="100" font-weight="900" fill="white" text-anchor="middle"></text>
+  <rect x="100" y="300" width="312" height="82" rx="14" fill="white"/>
+  <path d="M155 300 L178 242 Q188 220 210 220 L302 220 Q324 220 334 242 L357 300 Z" fill="white"/>
+  <path d="M190 290 L201 255 Q206 240 218 240 L294 240 Q306 240 311 255 L322 290 Z" fill="#006633" opacity="0.35"/>
+  <circle cx="173" cy="385" r="37" fill="#003311" stroke="white" stroke-width="8"/>
+  <circle cx="173" cy="385" r="14" fill="white"/>
+  <circle cx="339" cy="385" r="37" fill="#003311" stroke="white" stroke-width="8"/>
+  <circle cx="339" cy="385" r="14" fill="white"/>
+  <rect x="104" y="315" width="42" height="18" rx="6" fill="#ccffcc"/>
+  <rect x="366" y="315" width="42" height="18" rx="6" fill="#ffaaaa"/>
+  <rect x="70" y="455" width="372" height="6" rx="3" fill="white" opacity="0.35"/>
+  <text x="256" y="497" font-family="Arial,sans-serif" font-size="26" font-weight="bold" fill="white" text-anchor="middle" opacity="0.75"></text>
+</svg>

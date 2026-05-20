@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+  <title>Control Vehicular | Papeles Nacionales S.A.S.</title>
+  <link rel="manifest" href="./manifest.json"/>
+  <meta name="theme-color" content="#1a6b1e"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+  <meta name="apple-mobile-web-app-title" content="Ctrl Vehicular"/>
+  <meta name="description" content="Sistema de Control de Acceso Vehicular - Papeles Nacionales S.A.S."/>
+  <meta http-equiv="X-Content-Type-Options" content="nosniff"/>
+  <meta http-equiv="X-Frame-Options" content="DENY"/>
+  <link id="ati" rel="apple-touch-icon" href="./icon-192.png"/>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&display=swap" rel="stylesheet"/>
+  <!-- Google Sign-In (GSI) -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;background:#fff;overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
+    body{font-family:'Rajdhani',sans-serif;color:#1a2e1a}
+    #root{min-height:100%}
+    select option{background:#fff;color:#1a2e1a}
+    ::-webkit-scrollbar{width:4px}
+    ::-webkit-scrollbar-track{background:#f5f5f5}
+    ::-webkit-scrollbar-thumb{background:#c8e6c9;border-radius:2px}
+    input::placeholder,textarea::placeholder{color:#9ab89a;opacity:1}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+    button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+      outline:2.5px solid #1a6b1e;outline-offset:2px;border-radius:6px;
+    }
+    button{user-select:none;-webkit-user-select:none;}
+    .login-tab-btn{flex:1;padding:12px 0;background:none;border:none;border-bottom:3px solid transparent;
+      font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;cursor:pointer;
+      letter-spacing:0.08em;text-transform:uppercase;transition:all 0.15s;color:#5a8a62}
+    .login-tab-btn.active{color:#1a6b1e;border-bottom-color:#1a6b1e}
+    /* Google Sign-In button override */
+    .gsi-material-button{width:100%!important;max-width:100%!important;border-radius:8px!important;}
+    .oauth-divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:#9ab89a;font-size:12px;font-family:'DM Sans',sans-serif}
+    .oauth-divider::before,.oauth-divider::after{content:'';flex:1;border-top:1px solid #c8e6c9}
+    .oauth-badge{display:inline-flex;align-items:center;gap:5px;padding:'4px 10px';
+      background:#f0fdf4;border:1px solid #86efac;border-radius:20px;
+      font-size:11px;color:#15803d;font-family:'DM Sans',sans-serif}
+  </style>
+</head>
+<body>
+  <div id="root">
+    <div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#fff;flex-direction:column;gap:16px">
+      <div style="width:44px;height:44px;border:4px solid #1a6b1e;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite"></div>
+      <div style="color:#4a7a55;font-size:14px;letter-spacing:0.1em;font-family:'Rajdhani',sans-serif">Cargando aplicación...</div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/babel">
+    const {useState, useEffect, useCallback, useRef, useMemo} = React;
+
+    /* ══════════════════════════════════════════════════════════════
+       ICONO SVG
+    ══════════════════════════════════════════════════════════════ */
+    function IconVehiculo({size=72}){
+      const rx = Math.round(size*0.175);
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"
+          width={size} height={size}
+          style={{borderRadius:rx, display:'block', flexShrink:0}}>
+          <rect width="512" height="512" rx="90" fill="#004d26"/>
+          <rect width="512" height="220" fill="#006633"/>
+          <rect width="512" height="140" rx="90" fill="#006633"/>
+          <rect x="100" y="300" width="312" height="82" rx="14" fill="white"/>
+          <path d="M155 300 L178 242 Q188 220 210 220 L302 220 Q324 220 334 242 L357 300 Z" fill="white"/>
+          <path d="M190 290 L201 255 Q206 240 218 240 L294 240 Q306 240 311 255 L322 290 Z" fill="#006633" opacity="0.35"/>
+          <circle cx="173" cy="385" r="37" fill="#003311" stroke="white" strokeWidth="8"/>
+          <circle cx="173" cy="385" r="14" fill="white"/>
+          <circle cx="339" cy="385" r="37" fill="#003311" stroke="white" strokeWidth="8"/>
+          <circle cx="339" cy="385" r="14" fill="white"/>
+          <rect x="104" y="315" width="42" height="18" rx="6" fill="#ccffcc"/>
+          <rect x="366" y="315" width="42" height="18" rx="6" fill="#ffaaaa"/>
+          <rect x="70" y="455" width="372" height="6" rx="3" fill="white" opacity="0.35"/>
+        </svg>
+      );
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       COLORES CORPORATIVOS
+    ══════════════════════════════════════════════════════════════ */
+    const G       = "#1a6b1e";
+    const GM      = "#2e9e35";
+    const GHD     = "#0d3d12";
+    const BG      = "#ffffff";
+    const SRF     = "#f4faf5";
+    const BD      = "#c8e6c9";
+    const TX      = "#1a2e1a";
+    const TM      = "#5a8a62";
+    const DANGER  = "#dc2626";
+    const DANGER_BG  = "#fef2f2";
+    const SUCCESS    = "#15803d";
+    const SUCCESS_BG = "#f0fdf4";
+
+    /* ══════════════════════════════════════════════════════════════
+       PORTERÍAS
+    ══════════════════════════════════════════════════════════════ */
+    const PC = {
+      "Portería Principal":    {icon:"🏢", color:G,        tipos:["Residente","Gerente","Visitante","Contratista"],        rt:["Residente","Gerente","Visitante","Contratista"]},
+      "Portería Efluentes":    {icon:"🏭", color:"#2e7d32", tipos:["Colaborador","Visitante","Contratista"],                rt:["Colaborador","Visitante","Contratista"]},
+      "Portería Biopacol":     {icon:"🌿", color:"#388e3c", tipos:["Colaborador Biopacol","Visitante","Contratista"],      rt:["Colaborador Biopacol","Visitante","Contratista"]},
+      "Portería Urbanización": {icon:"🏘️", color:"#43a047", tipos:["Residente","Visitante","Contratista"],                 rt:["Residente","Visitante","Contratista"]},
+      "Parqueadero Principal": {icon:"🅿️", color:"#1b5e20", tipos:["Colaborador","Visitante","Contratista"],               rt:["Colaborador","Visitante","Contratista"]},
+    };
+    const ALL_RT = ["Residente","Gerente","Visitante","Contratista","Colaborador","Colaborador Biopacol"];
+    const TC = {
+      "Residente":            {bg:"#e8f5e9", c:"#1b5e20"},
+      "Gerente":              {bg:"#e8f5e9", c:"#1a6b1e"},
+      "Visitante":            {bg:"#f1f8e9", c:"#33691e"},
+      "Contratista":          {bg:"#fff8e1", c:"#e65100"},
+      "Colaborador":          {bg:"#e8f5e9", c:"#2e7d32"},
+      "Colaborador Biopacol": {bg:"#e0f2f1", c:"#00695c"},
+    };
+
+    /* ══════════════════════════════════════════════════════════════
+       STORAGE LOCAL — solo URL y sesión (sin contraseñas)
+    ══════════════════════════════════════════════════════════════ */
+    const MAX_LOCAL_RECORDS = 2000;
+    // Claves de sesión OAuth — TTL manejado por el servidor GAS
+    const SESSION_KEY = 'vpn_session';   // {token, role, name, email, exp}
+    const CFG_KEY     = 'vpn_cfg3';      // {url, googleClientId}
+
+    function lsGet(k, d){
+      try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }
+      catch{ return d; }
+    }
+    function lsSet(k, v){
+      try{ localStorage.setItem(k, JSON.stringify(v)); }
+      catch(e){
+        if(e.name==='QuotaExceededError' && k==='vpn_r'){
+          const current = lsGet('vpn_r',[]);
+          const trimmed = current.slice(0, Math.floor(MAX_LOCAL_RECORDS/2));
+          try{ localStorage.setItem(k, JSON.stringify(trimmed)); }catch{}
+        }
+      }
+    }
+    function lsDel(k){ try{ localStorage.removeItem(k); }catch{} }
+
+    /* ══════════════════════════════════════════════════════════════
+       SESIÓN OAUTH — helpers del lado cliente
+    ══════════════════════════════════════════════════════════════ */
+    function getSession(){
+      const s = lsGet(SESSION_KEY, null);
+      if(!s || !s.token) return null;
+      // Verificación client-side del exp (el servidor también lo verifica)
+      if(s.exp && s.exp < Date.now()) { lsDel(SESSION_KEY); return null; }
+      return s;
+    }
+    function saveSession(data){
+      // data = {session_token, role, name, email} — exp estimado 8h
+      const exp = Date.now() + 8 * 3600 * 1000;
+      lsSet(SESSION_KEY, { token: data.session_token, role: data.role,
+        name: data.name, email: data.email, exp });
+    }
+    function clearSession(){ lsDel(SESSION_KEY); }
+
+    /* ══════════════════════════════════════════════════════════════
+       SANITIZACIÓN
+    ══════════════════════════════════════════════════════════════ */
+    function sanitize(str, maxLen=200){
+      if(typeof str !== 'string') return '';
+      return str.slice(0, maxLen)
+        .replace(/[<>"'`]/g, c=>({'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#x27;','`':'&#x60;'}[c]))
+        .trim();
+    }
+    function sanitizePlaca(str){
+      return str.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
+    }
+    const PLACA_CARRO = /^[A-Z]{3}[0-9]{3}$/;
+    const PLACA_MOTO  = /^[A-Z]{3}[0-9]{2}[A-Z]$/;
+    function validarPlaca(placa, vehiculo){
+      if(!placa) return false;
+      if(vehiculo==='moto')  return PLACA_MOTO.test(placa);
+      if(vehiculo==='carro') return PLACA_CARRO.test(placa);
+      return PLACA_CARRO.test(placa) || PLACA_MOTO.test(placa);
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       API GOOGLE APPS SCRIPT — con session_token en cabecera
+    ══════════════════════════════════════════════════════════════ */
+    async function gasPost(url, data, sessionToken){
+      if(!url) return {ok:false, error:'Sin URL configurada'};
+      try{
+        const body = sessionToken ? {...data, session_token: sessionToken} : data;
+        const resp = await fetch(url, {
+          method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+          body: JSON.stringify(body), redirect:'follow', signal: AbortSignal.timeout(20000),
+        });
+        if(!resp.ok && resp.status!==302) throw new Error('HTTP '+resp.status);
+        return await resp.json();
+      }catch(e){
+        console.warn('GAS POST error:', e?.message);
+        return {ok:false, error: e?.message||'Error de red'};
+      }
+    }
+    async function gasGet(url, params={}, sessionToken){
+      if(!url) return null;
+      try{
+        const u = new URL(url);
+        Object.entries(params).forEach(([k,v])=> u.searchParams.set(k, String(v)));
+        if(sessionToken) u.searchParams.set('session_token', sessionToken);
+        const resp = await fetch(u.toString(), {cache:'no-store', signal: AbortSignal.timeout(20000)});
+        if(!resp.ok) throw new Error('HTTP '+resp.status);
+        return await resp.json();
+      }catch(e){ console.warn('GAS GET error:', e?.message); return null; }
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       UTILIDADES
+    ══════════════════════════════════════════════════════════════ */
+    function genId(){ return Date.now().toString(36)+crypto.getRandomValues(new Uint8Array(4)).join(''); }
+    function fmtDate(ts){
+      if(!ts) return '';
+      const d = new Date(ts);
+      if(isNaN(d)) return String(ts);
+      return d.toLocaleString('es-CO',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
+    }
+    function nowISO(){ return new Date().toISOString(); }
+    function nowLabel(){
+      return new Date().toLocaleString('es-CO',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    }
+    function exportCSV(recs){
+      const h = "Fecha,Portería,Movimiento,Tipo,Vehículo,Placa,Conductor,Guarda,Visita A,Observaciones";
+      const rows = recs.map(r=>[
+        r.fecha||r.ts||'', r.porteria||'', (r.movimiento||'').toUpperCase(),
+        r.tipo||'', r.vehiculo||'', r.placa||'', r.conductor||'', r.guarda||'',
+        r.visitaA||'', r.obs||''
+      ].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(','));
+      const csv = "\uFEFF" + [h,...rows].join('\r\n');
+      const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href=url; a.download=`registros-pn-${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(()=>URL.revokeObjectURL(url), 60000);
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       COMPONENTES UI
+    ══════════════════════════════════════════════════════════════ */
+    function Badge({tipo}){
+      const c = TC[tipo]||{bg:'#f5f5f5',c:'#666'};
+      return (
+        <span style={{background:c.bg,color:c.c,padding:'2px 9px',borderRadius:20,
+          fontSize:10,fontWeight:700,letterSpacing:'0.06em',whiteSpace:'nowrap',
+          border:`1px solid ${c.c}30`,display:'inline-block'}}>
+          {tipo ? tipo.toUpperCase() : '—'}
+        </span>
+      );
+    }
+    function BadgeVeh({vehiculo}){
+      if(!vehiculo) return null;
+      const isMoto = vehiculo==='moto';
+      return (
+        <span style={{background:isMoto?'#fef3c7':'#e0f2fe',color:isMoto?'#92400e':'#0369a1',
+          padding:'2px 8px',borderRadius:20,fontSize:10,fontWeight:700,letterSpacing:'0.06em',
+          border:`1px solid ${isMoto?'#fcd34d':'#7dd3fc'}`,display:'inline-block',whiteSpace:'nowrap'}}>
+          {isMoto?'🏍 MOTO':'🚗 CARRO'}
+        </span>
+      );
+    }
+    function FErr({msg='Campo requerido'}){
+      return (
+        <div role="alert" style={{color:DANGER,fontSize:11,marginTop:5,
+          fontFamily:'DM Sans,sans-serif',display:'flex',alignItems:'center',gap:4}}>
+          <span>✕</span> {msg}
+        </div>
+      );
+    }
+    function Toast({t}){
+      return (
+        <div role="status" aria-live="polite"
+          style={{position:'fixed',top:18,left:'50%',transform:'translateX(-50%)',
+            background:t.err?DANGER_BG:SUCCESS_BG,
+            border:`1px solid ${t.err?'#fca5a5':'#86efac'}`,
+            color:t.err?DANGER:SUCCESS,
+            padding:'11px 22px',borderRadius:10,fontSize:14,fontWeight:700,
+            zIndex:9999,maxWidth:'90vw',textAlign:'center',
+            fontFamily:'Rajdhani,sans-serif',letterSpacing:'0.06em',
+            boxShadow:'0 4px 20px rgba(0,0,0,0.15)',animation:'fadeIn 0.2s ease',
+            pointerEvents:'none'}}>
+          {t.msg}
+        </div>
+      );
+    }
+    function SyncBar({syncing, lastSync, err}){
+      if(!syncing && !err && !lastSync) return null;
+      return (
+        <div style={{background:err?DANGER_BG:syncing?'#fffbeb':SUCCESS_BG,
+          borderBottom:`1px solid ${err?'#fca5a5':syncing?'#fde68a':'#86efac'}`,
+          padding:'4px 16px',fontSize:11,fontFamily:'DM Sans,sans-serif',
+          color:err?DANGER:syncing?'#92400e':SUCCESS,
+          display:'flex',alignItems:'center',gap:6}}>
+          {syncing && <span style={{width:8,height:8,borderRadius:'50%',background:'#d97706',
+            display:'inline-block',animation:'pulse 1s infinite',flexShrink:0}}/>}
+          {err?'⚠️ Sin conexión — datos locales'
+            :syncing?'Sincronizando con Google Sheets...'
+            :lastSync&&`✓ Sync ${fmtDate(lastSync)}`}
+        </div>
+      );
+    }
+    function Spinner(){
+      return <div style={{width:18,height:18,border:'3px solid rgba(255,255,255,0.3)',
+        borderTopColor:'white',borderRadius:'50%',animation:'spin 0.8s linear infinite',
+        display:'inline-block',flexShrink:0}}/>;
+    }
+
+    /* ── Insignia OAuth ── */
+    function OAuthBadge({email}){
+      return (
+        <div style={{display:'inline-flex',alignItems:'center',gap:5,padding:'4px 10px',
+          background:'#f0fdf4',border:'1px solid #86efac',borderRadius:20,
+          fontSize:11,color:'#15803d',fontFamily:'DM Sans,sans-serif'}}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+          {email}
+        </div>
+      );
+    }
+
+    /* ── Botón "Iniciar sesión con Google" personalizado ── */
+    function GoogleSignInButton({onCredential, loading}){
+      const btnRef = useRef(null);
+      useEffect(()=>{
+        if(!window.google || !btnRef.current) return;
+        const cfg = lsGet(CFG_KEY, {});
+        if(!cfg.googleClientId) return;
+        window.google.accounts.id.initialize({
+          client_id: cfg.googleClientId,
+          callback: (response)=> onCredential(response.credential),
+          auto_select: false,
+          cancel_on_tap_outside: true,
+        });
+        window.google.accounts.id.renderButton(btnRef.current, {
+          theme: 'outline',
+          size: 'large',
+          text: 'signin_with',
+          locale: 'es',
+          width: 340,
+        });
+      },[]);
+      if(loading) return (
+        <div style={{display:'flex',alignItems:'center',justifyContent:'center',
+          gap:10,padding:14,background:SRF,borderRadius:8,border:`1px solid ${BD}`}}>
+          <Spinner/><span style={{color:TM,fontFamily:'DM Sans,sans-serif',fontSize:14}}>
+            Verificando con Google...
+          </span>
+        </div>
+      );
+      return <div ref={btnRef} style={{display:'flex',justifyContent:'center'}}/>;
+    }
+
+    /* ── Tarjeta de registro ── */
+    function RecordCard({r, onExit, hasExit, showPort}){
+      const [confirm, setConfirm] = useState(false);
+      const isIng = r.movimiento==='ingreso';
+      const done  = isIng && hasExit(r);
+      return (
+        <div style={{background:BG,borderRadius:12,padding:16,
+          border:`1px solid ${BD}`,borderLeft:`4px solid ${isIng?'#16a34a':DANGER}`,
+          marginBottom:10,boxShadow:'0 1px 4px rgba(0,0,0,0.06)',animation:'fadeIn 0.2s ease'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8,gap:8}}>
+            <div style={{display:'flex',gap:6,flexWrap:'wrap',alignItems:'center'}}>
+              <span style={{padding:'3px 10px',borderRadius:20,fontSize:11,fontWeight:700,
+                letterSpacing:'0.06em',
+                background:isIng?'#dcfce7':DANGER_BG,
+                color:isIng?'#15803d':DANGER,
+                border:`1px solid ${isIng?'#86efac':'#fca5a5'}`}}>
+                {isIng?'⬆ INGRESO':'⬇ SALIDA'}
+              </span>
+              <Badge tipo={r.tipo}/>
+              {r.vehiculo && <BadgeVeh vehiculo={r.vehiculo}/>}
+            </div>
+            <div style={{fontSize:11,color:TM,fontFamily:'DM Sans,sans-serif',whiteSpace:'nowrap',flexShrink:0}}>
+              {fmtDate(r.ts||r.fecha)}
+            </div>
+          </div>
+          <div style={{fontWeight:700,fontSize:22,letterSpacing:'0.12em',color:TX,lineHeight:1.1}}>{r.placa}</div>
+          <div style={{fontSize:14,color:TM,fontFamily:'DM Sans,sans-serif',marginTop:3}}>{r.conductor}</div>
+          {r.visitaA && (
+            <div style={{fontSize:12,color:TM,fontFamily:'DM Sans,sans-serif',marginTop:3}}>
+              Visita a: <strong style={{color:TX}}>{r.visitaA}</strong>
+            </div>
+          )}
+          <div style={{display:'flex',justifyContent:'space-between',marginTop:8,flexWrap:'wrap',gap:4}}>
+            {showPort && <div style={{fontSize:11,color:TM}}>{PC[r.porteria]?.icon} {r.porteria}</div>}
+            <div style={{fontSize:11,color:TM}}>Guarda: {r.guarda}</div>
+          </div>
+          {r.obs && (
+            <div style={{marginTop:8,padding:'7px 11px',background:SRF,borderRadius:7,
+              fontSize:12,color:TM,fontFamily:'DM Sans,sans-serif',
+              border:`1px solid ${BD}`,wordBreak:'break-word'}}>
+              💬 {r.obs}
+            </div>
+          )}
+          {isIng && !done && (
+            !confirm
+              ? <button onClick={()=>setConfirm(true)}
+                  style={{marginTop:10,width:'100%',padding:'9px',borderRadius:8,
+                    border:`1px solid ${DANGER}`,background:DANGER_BG,color:DANGER,
+                    fontFamily:'Rajdhani,sans-serif',fontSize:14,fontWeight:700,
+                    letterSpacing:'0.06em',cursor:'pointer'}}>
+                  ⬇ SALIDA
+                </button>
+              : <div style={{marginTop:10,display:'flex',gap:8}}>
+                  <button onClick={()=>{onExit(r);setConfirm(false);}}
+                    style={{flex:1,padding:'10px',borderRadius:8,border:'none',
+                      background:DANGER,color:'white',fontFamily:'Rajdhani,sans-serif',
+                      fontSize:14,fontWeight:700,cursor:'pointer'}}>
+                    ✓ CONFIRMAR SALIDA
+                  </button>
+                  <button onClick={()=>setConfirm(false)}
+                    style={{padding:'10px 14px',borderRadius:8,border:`1px solid ${BD}`,
+                      background:BG,color:TM,fontFamily:'Rajdhani,sans-serif',
+                      fontSize:14,fontWeight:700,cursor:'pointer'}}>✕</button>
+                </div>
+          )}
+          {isIng && done && (
+            <div style={{marginTop:8,fontSize:11,color:SUCCESS,fontFamily:'DM Sans,sans-serif',
+              textAlign:'center',padding:'6px',background:SUCCESS_BG,borderRadius:6,
+              border:'1px solid #86efac'}}>
+              ✓ Salida ya registrada
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       FORMULARIO RECURRENTE (reutilizable)
+    ══════════════════════════════════════════════════════════════ */
+    function FormRecurrente({tiposDisponibles, rvList, onAdd, onImport, color, importRef}){
+      const [nrv, setNrv] = useState({placa:'',conductor:'',tipo:'',vehiculo:''});
+      const inp2 = (err=false)=>({
+        width:'100%',background:err?DANGER_BG:SRF,border:`1.5px solid ${err?'#fca5a5':BD}`,
+        borderRadius:8,padding:'11px 14px',color:TX,fontFamily:'Rajdhani,sans-serif',
+        fontSize:15,outline:'none',boxSizing:'border-box',
+      });
+      const sel2 = (err=false)=>({...inp2(err),appearance:'none',WebkitAppearance:'none'});
+      const lbl2 = {display:'block',fontSize:11,fontWeight:600,letterSpacing:'0.12em',
+        color:TM,marginBottom:7,textTransform:'uppercase',fontFamily:'DM Sans,sans-serif'};
+      const btn2 = (bg,col,ex={})=>({borderRadius:8,padding:13,fontFamily:'Rajdhani,sans-serif',
+        fontSize:16,fontWeight:700,letterSpacing:'0.06em',cursor:'pointer',border:'none',
+        background:bg,color:col,width:'100%',boxShadow:(bg===G||bg===color)?'0 2px 8px rgba(26,107,30,0.25)':'none',...ex});
+      const placaPlaceholder = nrv.vehiculo==='moto'?'ABC92C':nrv.vehiculo==='carro'?'ABC123':'ABC123 / ABC92C';
+      return (
+        <div>
+          <label style={lbl2}>Tipo de vehículo *</label>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:12}}>
+            {[['carro','🚗 Carro'],['moto','🏍 Moto']].map(([v,l])=>(
+              <button key={v} onClick={()=>setNrv(p=>({...p,vehiculo:v,placa:''}))}
+                style={{padding:'12px 0',borderRadius:8,cursor:'pointer',fontFamily:'Rajdhani,sans-serif',
+                  fontSize:15,fontWeight:700,border:`2px solid ${nrv.vehiculo===v?color:BD}`,
+                  background:nrv.vehiculo===v?'#e8f5e9':BG,color:nrv.vehiculo===v?color:TM}}>
+                {l}
+              </button>
+            ))}
+          </div>
+          <label style={lbl2}>Tipo *</label>
+          <select style={{...sel2(false),marginBottom:12}} value={nrv.tipo}
+            onChange={e=>setNrv(p=>({...p,tipo:e.target.value}))}>
+            <option value="">— Seleccionar tipo —</option>
+            {tiposDisponibles.map(t=><option key={t}>{t}</option>)}
+          </select>
+          <label style={lbl2}>Placa *</label>
+          <input style={{...inp2(false),marginBottom:12,textTransform:'uppercase',
+            fontWeight:700,letterSpacing:'0.1em',fontSize:18}}
+            placeholder={placaPlaceholder} value={nrv.placa} maxLength={6}
+            onChange={e=>setNrv(p=>({...p,placa:sanitizePlaca(e.target.value)}))}/>
+          <label style={lbl2}>Conductor *</label>
+          <input style={{...inp2(false),marginBottom:14}}
+            placeholder="Nombre completo" value={nrv.conductor} maxLength={120}
+            onChange={e=>setNrv(p=>({...p,conductor:e.target.value}))}/>
+          <button style={btn2(color||G,'white',{marginBottom:10})}
+            onClick={()=>onAdd(nrv,()=>setNrv({placa:'',conductor:'',tipo:'',vehiculo:''}))}>
+            + AGREGAR RECURRENTE
+          </button>
+          {onImport && <>
+            <input type="file" accept=".csv,.txt" ref={importRef}
+              onChange={onImport} style={{display:'none'}}/>
+            <button style={btn2(BG,color||G,{border:`1.5px solid ${color||G}`,boxShadow:'none',fontSize:14})}
+              onClick={()=>importRef.current?.click()}>
+              📂 IMPORTAR CSV
+            </button>
+            <div style={{fontSize:11,color:TM,fontFamily:'DM Sans,sans-serif',
+              marginTop:8,lineHeight:1.6,padding:'8px 10px',background:SRF,borderRadius:6}}>
+              Formato CSV: <strong>placa,conductor,tipo,vehiculo</strong><br/>
+              Tipos: Residente, Gerente, Colaborador, Colaborador Biopacol, Contratista, Visitante<br/>
+              Vehículo: carro / moto (opcional, se detecta por placa)
+            </div>
+          </>}
+        </div>
+      );
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       APP PRINCIPAL
+    ══════════════════════════════════════════════════════════════ */
+    function App(){
+      // Configuración — solo URL y Google Client ID (sin contraseñas)
+      const [cfg, setCfg] = useState(()=> lsGet(CFG_KEY, {url:'', googleClientId:''}));
+      const isOk = cfg.url && cfg.url.includes('script.google.com');
+
+      const [screen,  setScr]  = useState('login');
+      const [user,    setUser] = useState(null);          // {type,porteria?,guard?,name?,email?,role?}
+      const [session, setSess] = useState(()=> getSession()); // sesión OAuth persistida
+      const [records, setRec]  = useState(()=> lsGet('vpn_r',[]));
+      const [rvList,  setRv]   = useState(()=> lsGet('vpn_rv',[]));
+      const [syncing, setSyn]  = useState(false);
+      const [lastSync,setLS]   = useState(null);
+      const [syncErr, setSEr]  = useState(false);
+      const [toast,   setToast]= useState(null);
+      const [now,     setNow]  = useState(new Date());
+
+      /* Formulario registro */
+      const [form,   setForm]  = useState({tipo:'',placa:'',conductor:'',visitaA:'',obs:'',vehiculo:''});
+      const [pQ,     setPQ]    = useState('');
+      const [showDd, setDd]    = useState(false);
+      const [tried,  setTried] = useState(false);
+      const [saving, setSaving]= useState(false);
+
+      /* Login */
+      const [loginMode,  setLoginMode]  = useState('guard');
+      const [lp,         setLp]         = useState('');
+      const [lg,         setLg]         = useState('');
+      const [loginErr,   setLoginErr]   = useState('');
+      const [oauthLoading, setOAuthLoad] = useState(false);
+
+      /* Tabs */
+      const [tab,  setTab]  = useState('reg');
+      const [atab, setAtab] = useState('records');
+
+      /* Filtros */
+      const [hq,    setHq]    = useState('');
+      const [hport, setHport] = useState('todas');
+      const [hmov,  setHmov]  = useState('todos');
+
+      /* Admin config */
+      const [cUrl,       setCUrl]       = useState(cfg.url);
+      const [cClientId,  setCClientId]  = useState(cfg.googleClientId||'');
+
+      /* Setup */
+      const [setupUrl,      setSetupUrl]      = useState('');
+      const [setupClientId, setSetupClientId] = useState('');
+
+      /* Import ref */
+      const importRef = useRef(null);
+
+      /* Reloj */
+      useEffect(()=>{
+        const t = setInterval(()=> setNow(new Date()), 1000);
+        return ()=> clearInterval(t);
+      },[]);
+
+      /* Restaurar sesión OAuth al cargar */
+      useEffect(()=>{
+        if(session && isOk){
+          // Sesión OAuth válida — restaurar pantalla correcta
+          if(session.role==='admin'){
+            setUser({type:'admin', name:session.name, email:session.email});
+            setScr('admin'); setAtab('records');
+          } else if(session.role==='viewer'){
+            setUser({type:'viewer', name:session.name, email:session.email});
+            setScr('viewer');
+          }
+        }
+      },[]);
+
+      /* Auto-sync */
+      useEffect(()=>{
+        if(!user || !isOk) return;
+        doSync();
+        const iv = setInterval(doSync, 60000);
+        return ()=> clearInterval(iv);
+      },[user, isOk]);
+
+      useEffect(()=>{ if(tab==='reg') resetForm(); },[tab]);
+
+      const notify = useCallback((msg, err=false)=>{
+        setToast({msg,err});
+        setTimeout(()=>setToast(null), 3500);
+      },[]);
+
+      const sesToken = session?.token || null;
+
+      /* ── Sync (con session_token para roles autenticados) ── */
+      async function doSync(){
+        if(!cfg.url || !user) return;
+        setSyn(true); setSEr(false);
+        try{
+          // El guarda no necesita token OAuth
+          const token = user.type==='guard' ? null : sesToken;
+          const params = {accion:'registros'};
+          if(user.type==='guard') params.porteria = user.porteria;
+          const res = await gasGet(cfg.url, params, token);
+          if(res?.registros){
+            const limited = res.registros.slice(0, MAX_LOCAL_RECORDS);
+            setRec(limited); lsSet('vpn_r', limited);
+          } else {
+            // Sesión expirada
+            if(res?.error?.includes('expirada') || res?.error?.includes('inválid')){
+              clearSession(); setSess(null);
+              setLoginErr('Sesión expirada. Por favor inicia sesión nuevamente.');
+              doLogout(); return;
+            }
+            setSEr(true);
+          }
+          const rv = await gasGet(cfg.url, {accion:'recurrentes'}, token);
+          if(rv?.recurrentes){ setRv(rv.recurrentes); lsSet('vpn_rv', rv.recurrentes); }
+          setLS(new Date().toISOString());
+        }catch(e){ setSEr(true); }
+        finally{ setSyn(false); }
+      }
+
+      /* ── Login Guarda (sin OAuth — solo nombre + portería) ── */
+      function doLogin(){
+        setLoginErr('');
+        if(!lp){ setLoginErr('Seleccione una portería'); return; }
+        const gn = lg.trim();
+        if(!gn || gn.length < 2){ setLoginErr('Ingrese el nombre del guarda (mín. 2 caracteres)'); return; }
+        if(!isOk){ setLoginErr('Configure la URL de Google Apps Script primero'); return; }
+        setUser({type:'guard', porteria:lp, guard:sanitize(gn)});
+        setScr('app'); setTab('reg'); resetForm();
+      }
+
+      /* ══════════════════════════════════════════════════════════════
+         OAUTH — Callback de Google Sign-In
+         Recibe el credential JWT firmado por Google,
+         lo envía al servidor GAS para validación y emisión de sesión
+      ══════════════════════════════════════════════════════════════ */
+      async function handleGoogleCredential(credential){
+        setLoginErr('');
+        setOAuthLoad(true);
+        try{
+          const result = await gasPost(cfg.url, {
+            accion: 'oauth_login',
+            credential,
+          }, null);
+
+          if(!result || !result.ok){
+            setLoginErr(result?.error || 'Error de autenticación. Verifica que tu email esté autorizado.');
+            return;
+          }
+
+          // Guardar sesión (token firmado por el servidor, no contraseña)
+          saveSession(result);
+          setSess({ token: result.session_token, role: result.role,
+            name: result.name, email: result.email,
+            exp: Date.now() + 8*3600*1000 });
+
+          notify(`✓ Bienvenido, ${result.name}`);
+
+          if(result.role === 'admin'){
+            setUser({type:'admin', name:result.name, email:result.email});
+            setScr('admin'); setAtab('records');
+          } else if(result.role === 'viewer'){
+            setUser({type:'viewer', name:result.name, email:result.email});
+            setScr('viewer');
+          } else {
+            setLoginErr('Rol no reconocido: ' + result.role);
+          }
+        }catch(e){
+          setLoginErr('Error de conexión con el servidor.');
+          console.error('OAuth error:', e);
+        }finally{
+          setOAuthLoad(false);
+        }
+      }
+
+      /* ── Logout ── */
+      function doLogout(){
+        clearSession(); setSess(null);
+        setScr('login'); setUser(null);
+        setLp(''); setLg('');
+        setLoginMode('guard'); setLoginErr('');
+        setRec([]); resetForm(); lsSet('vpn_r',[]);
+        // Revocar sesión Google para forzar nuevo login
+        if(window.google?.accounts?.id) window.google.accounts.id.disableAutoSelect();
+      }
+
+      /* ── Formulario ── */
+      function resetForm(){
+        setForm({tipo:'',placa:'',conductor:'',visitaA:'',obs:'',vehiculo:''});
+        setPQ(''); setDd(false); setTried(false);
+      }
+      async function doSubmit(){
+        if(saving) return;
+        setTried(true);
+        const isV   = form.tipo.includes('Visitante');
+        const placa = sanitizePlaca(form.placa);
+        const conductor = sanitize(form.conductor, 120);
+        const visitaA   = sanitize(form.visitaA, 120);
+        const obs       = sanitize(form.obs, 500);
+        const errors = [];
+        if(!form.vehiculo)                    errors.push('Seleccione tipo de vehículo (Moto o Carro)');
+        if(!form.tipo)                         errors.push('Seleccione tipo de persona');
+        if(!placa)                             errors.push('Ingrese la placa del vehículo');
+        else if(!validarPlaca(placa,form.vehiculo))
+          errors.push(form.vehiculo==='moto'?'Placa moto inválida (ej: ABC92C)':'Placa carro inválida (ej: ABC123)');
+        if(!conductor)                         errors.push('Ingrese el nombre del conductor');
+        if(isV && !visitaA)                    errors.push('Ingrese a quién visita');
+        if(errors.length>0){ notify(errors[0],true); return; }
+        setSaving(true);
+        try{
+          const rec = {
+            id:genId(), porteria:user.porteria, tipo:form.tipo, vehiculo:form.vehiculo,
+            placa, conductor, guarda:user.guard,
+            movimiento:'ingreso', visitaA, obs,
+            ts:nowISO(), fecha:nowLabel(),
+          };
+          const nr = [rec,...records].slice(0,MAX_LOCAL_RECORDS);
+          setRec(nr); lsSet('vpn_r',nr);
+          // El guarda no envía session_token
+          gasPost(cfg.url,{tipo_operacion:'registro',...rec}, null);
+          notify('✓ Ingreso registrado correctamente');
+          resetForm();
+        }finally{ setSaving(false); }
+      }
+
+      function doExit(rec){
+        const gn = user?.type==='admin'||user?.type==='viewer'
+          ? (user?.name||'Administrador')
+          : (user?.guard||'Sistema');
+        const e2 = {
+          id:genId(), porteria:rec.porteria, tipo:rec.tipo, vehiculo:rec.vehiculo||'',
+          placa:rec.placa, conductor:rec.conductor, guarda:gn, movimiento:'salida',
+          visitaA:rec.visitaA||'',
+          obs:sanitize(`Salida. Ingreso: ${fmtDate(rec.ts)}`),
+          ts:nowISO(), fecha:nowLabel(), quickFrom:rec.id,
+        };
+        const nr=[e2,...records].slice(0,MAX_LOCAL_RECORDS);
+        setRec(nr); lsSet('vpn_r',nr);
+        gasPost(cfg.url,{tipo_operacion:'registro',...e2}, sesToken);
+        notify('✓ Salida registrada');
+      }
+      function hasExit(rec){
+        const t=new Date(rec.ts||0).getTime();
+        return records.some(r=>r.placa===rec.placa&&r.movimiento==='salida'&&new Date(r.ts||0).getTime()>t);
+      }
+
+      /* ── Recurrentes ── */
+      function getFRv(){
+        if(!user||user.type==='admin'||user.type==='viewer') return [];
+        const rt=PC[user.porteria]?.rt||[];
+        const q=pQ.toUpperCase();
+        return rvList.filter(v=>rt.includes(v.tipo)&&(!q||v.placa.includes(q)||v.conductor.toUpperCase().includes(q)));
+      }
+      function pickRv(v){
+        setForm(p=>({...p,placa:v.placa,conductor:v.conductor,tipo:v.tipo,vehiculo:v.vehiculo||'carro'}));
+        setPQ(v.placa); setDd(false);
+      }
+      function doAddRvGeneric(nrv, onReset, tiposValidos){
+        const placa=sanitizePlaca(nrv.placa);
+        const conductor=sanitize(nrv.conductor,120);
+        if(!nrv.vehiculo){ notify('Seleccione tipo de vehículo',true); return; }
+        if(!validarPlaca(placa,nrv.vehiculo)){
+          notify(nrv.vehiculo==='moto'?'Placa moto inválida (ej: ABC92C)':'Placa carro inválida (ej: ABC123)',true); return;
+        }
+        if(!conductor){ notify('Ingrese el conductor',true); return; }
+        if(!nrv.tipo){ notify('Seleccione el tipo',true); return; }
+        if(!tiposValidos.includes(nrv.tipo)){ notify('Tipo no válido para esta portería',true); return; }
+        if(rvList.find(v=>v.placa===placa)){ notify('Esa placa ya existe',true); return; }
+        const v={id:genId(),placa,conductor,tipo:nrv.tipo,vehiculo:nrv.vehiculo};
+        const nl=[...rvList,v];
+        setRv(nl); lsSet('vpn_rv',nl);
+        gasPost(cfg.url,{tipo_operacion:'recurrente_agregar',...v}, sesToken);
+        onReset&&onReset();
+        notify('✓ Recurrente agregado');
+      }
+      function doDelRv(id){
+        const nl=rvList.filter(v=>v.id!==id);
+        setRv(nl); lsSet('vpn_rv',nl);
+        gasPost(cfg.url,{tipo_operacion:'recurrente_eliminar',id}, sesToken);
+        notify('Vehículo eliminado');
+      }
+
+      /* ── Importar CSV ── */
+      function handleImportFile(e){
+        const file=e.target.files[0]; if(!file) return;
+        const reader=new FileReader();
+        reader.onload=ev=>doImportRv(ev.target.result);
+        reader.readAsText(file,'utf-8');
+        e.target.value='';
+      }
+      function doImportRv(csvText){
+        const lines=csvText.split(/\r?\n/).filter(l=>l.trim());
+        const tiposValidos=["Residente","Gerente","Visitante","Contratista","Colaborador","Colaborador Biopacol"];
+        let added=0, skipped=0;
+        const nl=[...rvList];
+        for(const line of lines){
+          const low=line.toLowerCase().trim();
+          if(low.startsWith('placa')||low.startsWith('"placa')) continue;
+          const parts=line.split(',').map(p=>p.trim().replace(/^"|"$/g,''));
+          if(parts.length<3){ skipped++; continue; }
+          const placa=sanitizePlaca(parts[0]);
+          const conductor=sanitize(parts[1]||'',120);
+          const tipo=(parts[2]||'').trim();
+          const vehRaw=(parts[3]||'').toLowerCase().trim();
+          const isCarro=PLACA_CARRO.test(placa);
+          const isMoto=PLACA_MOTO.test(placa);
+          if(!isCarro&&!isMoto){ skipped++; continue; }
+          if(!tiposValidos.includes(tipo)){ skipped++; continue; }
+          if(!conductor){ skipped++; continue; }
+          if(nl.find(v=>v.placa===placa)){ skipped++; continue; }
+          const vehiculo=vehRaw==='moto'?'moto':vehRaw==='carro'?'carro':(isMoto?'moto':'carro');
+          const v={id:genId(),placa,conductor,tipo,vehiculo};
+          nl.push(v);
+          gasPost(cfg.url,{tipo_operacion:'recurrente_agregar',...v}, sesToken);
+          added++;
+        }
+        setRv(nl); lsSet('vpn_rv',nl);
+        notify(`✓ Importados: ${added}. Omitidos: ${skipped}`);
+      }
+
+      /* ── Config admin ── */
+      async function doSaveCfg(){
+        if(!cUrl.includes('script.google.com')){ notify('URL inválida — debe ser de script.google.com',true); return; }
+        if(!cClientId.trim()){ notify('Ingrese el Google Client ID',true); return; }
+        const nc={url:cUrl, googleClientId:cClientId.trim()};
+        setCfg(nc); lsSet(CFG_KEY, nc);
+        setCUrl(cUrl); setCClientId(cClientId.trim());
+        notify('✓ Configuración guardada');
+      }
+      async function doSetupSave(){
+        if(!setupUrl.includes('script.google.com')){ notify('URL inválida',true); return; }
+        if(!setupClientId.trim()){ notify('Ingrese el Google Client ID (termina en .apps.googleusercontent.com)',true); return; }
+        const nc={url:setupUrl, googleClientId:setupClientId.trim()};
+        setCfg(nc); lsSet(CFG_KEY, nc);
+        notify('✓ Configuración guardada. Puede iniciar sesión con Google.');
+      }
+
+      /* ── Registros filtrados ── */
+      const filtR = useMemo(()=>{
+        return records.filter(r=>{
+          if(user?.type==='guard'&&r.porteria!==user.porteria) return false;
+          const mp=hport==='todas'||r.porteria===hport;
+          const mm=hmov==='todos'||r.movimiento===hmov;
+          if(!hq) return mp&&mm;
+          const q=hq.toLowerCase();
+          return mp&&mm&&(
+            r.placa?.toLowerCase().includes(q)||
+            r.conductor?.toLowerCase().includes(q)||
+            r.guarda?.toLowerCase().includes(q)||
+            r.tipo?.toLowerCase().includes(q)||
+            r.vehiculo?.toLowerCase().includes(q)
+          );
+        });
+      },[records,user,hport,hmov,hq]);
+
+      /* ── Estilos compartidos ── */
+      const inp = (err=false)=>({
+        width:'100%',background:err?DANGER_BG:SRF,border:`1.5px solid ${err?'#fca5a5':BD}`,
+        borderRadius:8,padding:'11px 14px',color:TX,fontFamily:'Rajdhani,sans-serif',
+        fontSize:15,outline:'none',boxSizing:'border-box',transition:'border-color 0.2s',
+      });
+      const sel = (err=false)=>({...inp(err),appearance:'none',WebkitAppearance:'none'});
+      const card = {background:BG,borderRadius:12,padding:16,border:`1px solid ${BD}`,
+        marginBottom:14,boxShadow:'0 1px 4px rgba(0,0,0,0.05)'};
+      const lbl = {display:'block',fontSize:11,fontWeight:600,letterSpacing:'0.12em',
+        color:TM,marginBottom:7,textTransform:'uppercase',fontFamily:'DM Sans,sans-serif'};
+      const btn = (bg,col,ex={})=>({
+        borderRadius:8,padding:13,fontFamily:'Rajdhani,sans-serif',fontSize:16,fontWeight:700,
+        letterSpacing:'0.06em',cursor:'pointer',border:'none',background:bg,color:col,
+        width:'100%',transition:'opacity 0.15s',
+        boxShadow:(bg===G||bg===GM)?'0 2px 8px rgba(26,107,30,0.25)':'none',...ex
+      });
+      const wrap = {fontFamily:'Rajdhani,sans-serif',background:BG,minHeight:'100vh',color:TX,maxWidth:430,margin:'0 auto'};
+
+      const pc  = user?.type==='guard' ? PC[user.porteria] : null;
+      const frv = getFRv();
+      const rvc = pc ? rvList.filter(v=>pc.rt.includes(v.tipo)).length : 0;
+      const isV = form.tipo.includes('Visitante')||form.tipo.includes('Contratista');
+
+      /* ══════════════════════════════════════════════════════════════
+         PANTALLA: SETUP (primer uso)
+      ══════════════════════════════════════════════════════════════ */
+      if(!isOk) return (
+        <div style={{...wrap,padding:'24px 20px',minHeight:'100vh',display:'flex',flexDirection:'column',justifyContent:'center'}}>
+          {toast&&<Toast t={toast}/>}
+          <div style={{textAlign:'center',marginBottom:24}}>
+            <IconVehiculo size={72}/>
+            <div style={{fontSize:24,fontWeight:900,color:GHD,marginTop:14,letterSpacing:'0.04em'}}>PAPELES NACIONALES</div>
+            <div style={{fontSize:13,color:G,fontWeight:600,letterSpacing:'0.2em',marginTop:4}}>Control Vehicular</div>
+          </div>
+          <div style={card}>
+            <div style={{fontSize:16,fontWeight:700,color:G,marginBottom:4}}>⚙️ Configuración Inicial</div>
+            <div style={{fontSize:12,color:TM,fontFamily:'DM Sans,sans-serif',marginBottom:16,lineHeight:1.6}}>
+              Configure la conexión con Google Apps Script y el Client ID de Google OAuth.
+            </div>
+            <label style={lbl}>URL del Google Apps Script *</label>
+            <textarea style={{...inp(false),resize:'none',height:76,fontSize:12,lineHeight:1.4,marginBottom:12}}
+              placeholder="https://script.google.com/macros/s/AKfy.../exec"
+              value={setupUrl} onChange={e=>setSetupUrl(e.target.value)}/>
+            <label style={lbl}>Google Client ID (OAuth) *</label>
+            <input style={{...inp(false),marginBottom:4,fontSize:12}}
+              placeholder="123456789-abc.apps.googleusercontent.com"
+              value={setupClientId} onChange={e=>setSetupClientId(e.target.value)}/>
+            <div style={{fontSize:11,color:TM,fontFamily:'DM Sans,sans-serif',marginBottom:16,lineHeight:1.5}}>
+              Obténlo en <strong>console.cloud.google.com</strong> → APIs &amp; Services → Credenciales → ID de cliente OAuth 2.0
+            </div>
+            <button style={btn(G,'white')} onClick={doSetupSave}>✓ GUARDAR Y CONTINUAR</button>
+          </div>
+          <div style={{textAlign:'center',marginTop:14,fontSize:11,color:'#9ab89a',fontFamily:'DM Sans,sans-serif'}}>
+            Control Vehicular · Papeles Nacionales S.A.S. · v4.0 OAuth
+          </div>
+        </div>
+      );
+
+      /* ══════════════════════════════════════════════════════════════
+         PANTALLA: LOGIN
+      ══════════════════════════════════════════════════════════════ */
+      if(screen==='login') return (
+        <div style={{...wrap,minHeight:'100vh',display:'flex',flexDirection:'column',background:'#fff'}}>
+          {toast&&<Toast t={toast}/>}
+
+          {/* Hero */}
+          <div style={{padding:'44px 24px 28px',textAlign:'center',
+            borderBottom:`1px solid ${BD}`,background:'#fff'}}>
+            <div style={{display:'inline-flex',justifyContent:'center',marginBottom:18}}>
+              <IconVehiculo size={80}/>
+            </div>
+            <div style={{fontSize:28,fontWeight:900,letterSpacing:'0.04em',color:GHD,lineHeight:1.05,fontFamily:'Rajdhani,sans-serif'}}>
+              PAPELES NACIONALES
+            </div>
+            <div style={{fontSize:14,fontWeight:600,letterSpacing:'0.22em',color:G,marginTop:6,fontFamily:'Rajdhani,sans-serif'}}>
+              Control Vehicular
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <div style={{display:'flex',borderBottom:`1.5px solid ${BD}`,background:'#fff'}}>
+            {[['guard','🔒 Guarda'],['admin','🛡️ Admin'],['viewer','👁 Visor']].map(([m,l])=>(
+              <button key={m}
+                className={`login-tab-btn${loginMode===m?' active':''}`}
+                onClick={()=>{setLoginMode(m);setLoginErr('');}}>
+                {l}
+              </button>
+            ))}
+          </div>
+
+          <div style={{padding:'22px 20px',flex:1,background:'#fff'}}>
+            <div style={{...card,marginBottom:14}}>
+
+              {/* GUARDA — login sin OAuth */}
+              {loginMode==='guard' && <>
+                <label style={lbl}>Portería / Punto de control *</label>
+                <select style={{...sel(false),marginBottom:12}} value={lp}
+                  onChange={e=>{setLp(e.target.value);setLoginErr('');}}>
+                  <option value="">— Seleccionar portería —</option>
+                  {Object.keys(PC).map(p=><option key={p} value={p}>{PC[p].icon} {p}</option>)}
+                </select>
+                {lp && (
+                  <div style={{marginBottom:12,padding:'8px 12px',background:SRF,
+                    borderRadius:8,borderLeft:`3px solid ${PC[lp].color}`}}>
+                    <div style={{fontSize:11,color:TM,fontFamily:'DM Sans,sans-serif',marginBottom:5}}>
+                      Tipos autorizados:
+                    </div>
+                    <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+                      {PC[lp].tipos.map(t=><Badge key={t} tipo={t}/>)}
+                    </div>
+                  </div>
+                )}
+                <label style={lbl}>Guarda de seguridad *</label>
+                <input style={inp(false)} placeholder="Nombre completo"
+                  value={lg} onChange={e=>{setLg(e.target.value);setLoginErr('');}}
+                  onKeyDown={e=>e.key==='Enter'&&doLogin()}
+                  maxLength={80} autoComplete="name"/>
+              </>}
+
+              {/* ADMIN — OAuth Google */}
+              {loginMode==='admin' && <>
+                <div style={{fontSize:14,fontWeight:700,color:G,marginBottom:6}}>
+                  🛡️ Acceso Administrador
+                </div>
+                <div style={{fontSize:12,color:TM,fontFamily:'DM Sans,sans-serif',
+                  marginBottom:16,lineHeight:1.5,padding:'8px 10px',
+                  background:'#eff6ff',borderRadius:8,border:'1px solid #bfdbfe'}}>
+                  🔒 Autenticación segura vía <strong>Google OAuth</strong>.<br/>
+                  Solo emails autorizados en el servidor pueden acceder.
+                </div>
+                <GoogleSignInButton
+                  onCredential={handleGoogleCredential}
+                  loading={oauthLoading}/>
+              </>}
+
+              {/* VISOR — OAuth Google */}
+              {loginMode==='viewer' && <>
+                <div style={{fontSize:14,fontWeight:700,color:G,marginBottom:6}}>
+                  👁 Acceso Visor
+                </div>
+                <div style={{fontSize:12,color:TM,fontFamily:'DM Sans,sans-serif',
+                  marginBottom:16,lineHeight:1.5,padding:'8px 10px',
+                  background:'#eff6ff',borderRadius:8,border:'1px solid #bfdbfe'}}>
+                  🔒 Autenticación segura vía <strong>Google OAuth</strong>.<br/>
+                  Los usuarios visor pueden consultar registros y exportar CSV.
+                </div>
+                <GoogleSignInButton
+                  onCredential={handleGoogleCredential}
+                  loading={oauthLoading}/>
+              </>}
+
+              {loginErr && (
+                <div role="alert" style={{marginTop:12,padding:'8px 12px',
+                  background:DANGER_BG,borderRadius:8,border:`1px solid #fca5a5`,
+                  color:DANGER,fontSize:12,fontFamily:'DM Sans,sans-serif'}}>
+                  ⚠️ {loginErr}
+                </div>
+              )}
+            </div>
+
+            {loginMode==='guard' && (
+              <button style={btn(G,'white',{fontSize:17,padding:16,marginBottom:10})} onClick={doLogin}>
+                INICIAR TURNO →
+              </button>
+            )}
+
+            <button onClick={()=>{const nc={url:'',googleClientId:''};setCfg(nc);lsSet(CFG_KEY,nc);}}
+              style={{marginTop:4,background:'none',border:'none',color:'#9ab89a',
+                fontSize:11,cursor:'pointer',width:'100%',padding:6,fontFamily:'DM Sans,sans-serif'}}>
+              ⚙️ Reconfigurar
+            </button>
+          </div>
+          <div style={{textAlign:'center',padding:'14px',fontSize:11,
+            color:'#c8e6c9',fontFamily:'DM Sans,sans-serif',background:'#fff'}}>
+            v4.0 OAuth · Papeles Nacionales S.A.S.
+          </div>
+        </div>
+      );
+
+      /* ══════════════════════════════════════════════════════════════
+         PANTALLA: ADMIN
+      ══════════════════════════════════════════════════════════════ */
+      if(screen==='admin') return (
+        <div style={{...wrap,paddingBottom:80}}>
+          {toast&&<Toast t={toast}/>}
+          <div style={{background:GHD,padding:'10px 16px',position:'sticky',top:0,zIndex:50}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <IconVehiculo size={32}/>
+                <div>
+                  <div style={{fontSize:13,fontWeight:700,color:'white',letterSpacing:'0.05em'}}>PAPELES NACIONALES</div>
+                  <div style={{fontSize:9,color:'rgba(255,255,255,0.5)',letterSpacing:'0.12em',textTransform:'uppercase',fontFamily:'DM Sans,sans-serif'}}>Panel Administrativo</div>
+                </div>
+              </div>
+              <div style={{textAlign:'right'}}>
+                <div style={{fontSize:11,color:'rgba(255,255,255,0.7)',fontFamily:'DM Sans,sans-serif',marginBottom:2}}>
+                  {user?.email}
+                </div>
+                <button onClick={doLogout}
+                  style={{background:'none',border:'none',color:'rgba(255,255,255,0.5)',
+                    fontSize:11,cursor:'pointer',fontFamily:'DM Sans,sans-serif',padding:0}}>
+                  Salir
+                </button>
+              </div>
+            </div>
+          </div>
+          <SyncBar syncing={syncing} lastSync={lastSync} err={syncErr}/>
+          <div style={{display:'flex',background:BG,borderBottom:`1.5px solid ${BD}`,position:'sticky',top:53,zIndex:40}}>
+            {[['records','📊 Registros'],['recurring','⭐ Recurrentes'],['config','⚙️ Config']].map(([k,l])=>(
+              <button key={k} onClick={()=>setAtab(k)}
+                style={{flex:1,padding:'10px 0',background:'none',border:'none',
+                  borderBottom:`2.5px solid ${atab===k?G:'transparent'}`,
+                  color:atab===k?G:TM,fontFamily:'Rajdhani,sans-serif',
+                  fontSize:11,fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',cursor:'pointer'}}>
+                {l}
+              </button>
+            ))}
+          </div>
+          <div style={{padding:16}}>
+
+            {/* ── REGISTROS ── */}
+            {atab==='records' && <>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:14}}>
+                {[
+                  ['Total',records.length,G],
+                  ['Ingresos',records.filter(r=>r.movimiento==='ingreso').length,'#16a34a'],
+                  ['Salidas',records.filter(r=>r.movimiento==='salida').length,DANGER],
+                ].map(([l,v,c])=>(
+                  <div key={l} style={{background:BG,borderRadius:10,padding:'12px 8px',
+                    textAlign:'center',border:`1.5px solid ${c}25`,boxShadow:'0 1px 4px rgba(0,0,0,0.06)'}}>
+                    <div style={{fontSize:28,fontWeight:700,color:c,lineHeight:1}}>{v}</div>
+                    <div style={{fontSize:10,color:TM,fontFamily:'DM Sans,sans-serif',marginTop:3}}>{l}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{display:'flex',gap:8,marginBottom:14}}>
+                <button onClick={()=>exportCSV(filtR)}
+                  style={{...btn(G,'white',{flex:1,fontSize:13,padding:'10px'})}}>
+                  ⬇ Exportar CSV
+                </button>
+                <button onClick={doSync}
+                  style={{...btn(BG,G,{flex:'none',width:'auto',padding:'0 16px',
+                    border:`1.5px solid ${G}`,fontSize:13,boxShadow:'none'})}}>
+                  {syncing?<Spinner/>:'🔄'} Sync
+                </button>
+              </div>
+              <input style={{...inp(false),marginBottom:10}}
+                placeholder="Buscar placa, conductor, tipo, vehículo..."
+                value={hq} onChange={e=>setHq(e.target.value)} maxLength={100}/>
+              <div style={{display:'flex',gap:6,marginBottom:10,overflowX:'auto',paddingBottom:4}}>
+                {['todas',...Object.keys(PC)].map(p=>(
+                  <button key={p} onClick={()=>setHport(p)}
+                    style={{padding:'4px 10px',borderRadius:20,
+                      border:`1.5px solid ${hport===p?(p==='todas'?G:PC[p]?.color):BD}`,
+                      background:hport===p?'#e8f5e9':'transparent',
+                      color:hport===p?(p==='todas'?G:PC[p]?.color):TM,
+                      fontFamily:'Rajdhani,sans-serif',fontSize:10,fontWeight:700,
+                      cursor:'pointer',whiteSpace:'nowrap'}}>
+                    {p==='todas'?'TODAS':PC[p].icon+' '+p.replace('Portería ','').replace('Parqueadero ','P.')}
+                  </button>
+                ))}
+              </div>
+              <div style={{display:'flex',gap:6,marginBottom:12}}>
+                {['todos','ingreso','salida'].map(m=>(
+                  <button key={m} onClick={()=>setHmov(m)}
+                    style={{flex:1,padding:'7px',borderRadius:8,
+                      border:`1.5px solid ${hmov===m?(m==='ingreso'?'#16a34a':m==='salida'?DANGER:G):BD}`,
+                      background:hmov===m?(m==='ingreso'?SUCCESS_BG:m==='salida'?DANGER_BG:'#e8f5e9'):'transparent',
+                      color:hmov===m?(m==='ingreso'?'#16a34a':m==='salida'?DANGER:G):TM,
+                      fontFamily:'Rajdhani,sans-serif',fontSize:11,fontWeight:700,
+                      cursor:'pointer',textTransform:'uppercase'}}>
+                    {m==='todos'?'TODOS':m==='ingreso'?'⬆ INGRESO':'⬇ SALIDA'}
+                  </button>
+                ))}
+              </div>
+              <div style={{fontSize:11,color:TM,marginBottom:12,fontFamily:'DM Sans,sans-serif'}}>
+                {filtR.length} registro{filtR.length!==1?'s':''}
+              </div>
+              {filtR.length===0
+                ?<div style={{textAlign:'center',padding:'50px 0',color:TM}}>
+                   <div style={{fontSize:48}}>📋</div>
+                   <div style={{fontFamily:'DM Sans,sans-serif',marginTop:10}}>Sin registros</div>
+                 </div>
+                :filtR.map(r=><RecordCard key={r.id} r={r} onExit={doExit} hasExit={hasExit} showPort={true}/>)
+              }
+            </>}
+
+            {/* ── RECURRENTES ── */}
+            {atab==='recurring' && <>
+              <div style={card}>
+                <div style={{fontSize:15,fontWeight:700,marginBottom:14,color:G}}>
+                  ⭐ Agregar / Importar Recurrentes
+                </div>
+                <FormRecurrente
+                  tiposDisponibles={ALL_RT}
+                  rvList={rvList}
+                  onAdd={(nrv,cb)=>doAddRvGeneric(nrv,cb,ALL_RT)}
+                  onImport={handleImportFile}
+                  importRef={importRef}
+                  color={G}/>
+              </div>
+              <div style={{fontSize:11,color:TM,letterSpacing:'0.1em',fontWeight:700,
+                textTransform:'uppercase',marginBottom:12,fontFamily:'DM Sans,sans-serif'}}>
+                Lista ({rvList.length})
+              </div>
+              {rvList.length===0
+                ?<div style={{textAlign:'center',color:TM,padding:'30px 0',fontFamily:'DM Sans,sans-serif'}}>
+                   Sin vehículos recurrentes
+                 </div>
+                :rvList.map(v=>(
+                    <div key={v.id} style={{...card,display:'flex',justifyContent:'space-between',
+                      alignItems:'center',marginBottom:8}}>
+                      <div>
+                        <div style={{fontWeight:700,letterSpacing:'0.1em',fontSize:18}}>{v.placa}</div>
+                        <div style={{fontSize:13,color:TM,fontFamily:'DM Sans,sans-serif',marginBottom:4}}>{v.conductor}</div>
+                        <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+                          <Badge tipo={v.tipo}/>
+                          {v.vehiculo&&<BadgeVeh vehiculo={v.vehiculo}/>}
+                        </div>
+                      </div>
+                      <button onClick={()=>doDelRv(v.id)}
+                        style={{background:DANGER_BG,color:DANGER,border:'1px solid #fca5a5',
+                          borderRadius:8,padding:'8px 14px',cursor:'pointer',
+                          fontFamily:'Rajdhani,sans-serif',fontWeight:700,fontSize:16}}>✕</button>
+                    </div>
+                  ))
+              }
+            </>}
+
+            {/* ── CONFIG ── */}
+            {atab==='config' && <>
+              {/* Sesión activa */}
+              <div style={{...card,background:'#f0fdf4',borderColor:'#86efac'}}>
+                <div style={{fontSize:13,fontWeight:700,color:SUCCESS,marginBottom:8}}>
+                  🔒 Sesión OAuth Activa
+                </div>
+                <OAuthBadge email={user?.email||''}/>
+                <div style={{fontSize:11,color:TM,fontFamily:'DM Sans,sans-serif',marginTop:8,lineHeight:1.5}}>
+                  Rol: <strong>{user?.role||'admin'}</strong> · Sesión verificada en servidor GAS · TTL 8h
+                </div>
+              </div>
+              <div style={card}>
+                <div style={{fontSize:15,fontWeight:700,marginBottom:6,color:G}}>🔗 URL Google Apps Script</div>
+                <label style={lbl}>URL</label>
+                <textarea style={{...inp(false),resize:'none',height:76,fontSize:12,lineHeight:1.4}}
+                  value={cUrl} onChange={e=>setCUrl(e.target.value)}
+                  placeholder="https://script.google.com/macros/s/.../exec"/>
+              </div>
+              <div style={card}>
+                <div style={{fontSize:15,fontWeight:700,marginBottom:6,color:G}}>🔑 Google Client ID (OAuth)</div>
+                <label style={lbl}>Client ID</label>
+                <input style={{...inp(false),fontSize:12}}
+                  value={cClientId} onChange={e=>setCClientId(e.target.value)}
+                  placeholder="123456789-abc.apps.googleusercontent.com"/>
+                <div style={{fontSize:11,color:TM,fontFamily:'DM Sans,sans-serif',marginTop:8,lineHeight:1.5}}>
+                  Para cambiar el Client ID deberás cerrar sesión y volver a autenticarte.
+                </div>
+              </div>
+              <div style={{...card,background:'#f0fdf4',borderColor:'#86efac'}}>
+                <div style={{fontSize:12,color:SUCCESS,fontFamily:'DM Sans,sans-serif',lineHeight:1.6}}>
+                  ✅ <strong>OAuth activo:</strong> Las contraseñas ya no se almacenan en este dispositivo.
+                  La autenticación se valida en el servidor Google Apps Script.
+                </div>
+              </div>
+              <button style={btn(G,'white',{fontSize:17,padding:16,marginBottom:10})} onClick={doSaveCfg}>
+                💾 GUARDAR CONFIGURACIÓN
+              </button>
+              <button onClick={doSync}
+                style={btn(BG,G,{border:`1.5px solid ${G}`,fontSize:14,marginBottom:10,boxShadow:'none'})}>
+                {syncing?'⏳ Sincronizando...':'🔄 Sincronizar ahora'}
+              </button>
+              <button onClick={doLogout}
+                style={btn('transparent',TM,{border:`1.5px solid ${BD}`,fontSize:14,boxShadow:'none'})}>
+                ← Cerrar Sesión
+              </button>
+            </>}
+          </div>
+        </div>
+      );
+
+      /* ══════════════════════════════════════════════════════════════
+         PANTALLA: VISOR (solo lectura)
+      ══════════════════════════════════════════════════════════════ */
+      if(screen==='viewer') return (
+        <div style={{...wrap,paddingBottom:40}}>
+          {toast&&<Toast t={toast}/>}
+          <div style={{background:GHD,padding:'10px 16px',position:'sticky',top:0,zIndex:50}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <IconVehiculo size={32}/>
+                <div>
+                  <div style={{fontSize:13,fontWeight:700,color:'white',letterSpacing:'0.05em'}}>PAPELES NACIONALES</div>
+                  <div style={{fontSize:9,color:'rgba(255,255,255,0.5)',letterSpacing:'0.12em',textTransform:'uppercase',fontFamily:'DM Sans,sans-serif'}}>
+                    Visor · {user?.name}
+                  </div>
+                </div>
+              </div>
+              <div style={{textAlign:'right'}}>
+                <div style={{fontSize:11,color:'rgba(255,255,255,0.7)',fontFamily:'DM Sans,sans-serif',marginBottom:2}}>
+                  {user?.email}
+                </div>
+                <button onClick={doLogout}
+                  style={{background:'none',border:'none',color:'rgba(255,255,255,0.5)',
+                    fontSize:11,cursor:'pointer',fontFamily:'DM Sans,sans-serif',padding:0}}>Salir</button>
+              </div>
+            </div>
+          </div>
+          <SyncBar syncing={syncing} lastSync={lastSync} err={syncErr}/>
+          <div style={{padding:16}}>
+            <div style={{...card,background:'#f0fdf4',borderColor:'#86efac',padding:'10px 14px',marginBottom:14}}>
+              <div style={{fontSize:11,color:SUCCESS,fontFamily:'DM Sans,sans-serif'}}>
+                🔒 Sesión OAuth · <OAuthBadge email={user?.email||''}/>
+              </div>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:14}}>
+              {[['Total',records.length,G],['Ingresos',records.filter(r=>r.movimiento==='ingreso').length,'#16a34a'],['Salidas',records.filter(r=>r.movimiento==='salida').length,DANGER]].map(([l,v,c])=>(
+                <div key={l} style={{background:BG,borderRadius:10,padding:'12px 8px',textAlign:'center',
+                  border:`1.5px solid ${c}25`,boxShadow:'0 1px 4px rgba(0,0,0,0.06)'}}>
+                  <div style={{fontSize:28,fontWeight:700,color:c,lineHeight:1}}>{v}</div>
+                  <div style={{fontSize:10,color:TM,fontFamily:'DM Sans,sans-serif',marginTop:3}}>{l}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{display:'flex',gap:8,marginBottom:14}}>
+              <button onClick={()=>exportCSV(filtR)}
+                style={{...btn(G,'white',{flex:1,fontSize:13,padding:'10px'})}}>
+                ⬇ Exportar CSV
+              </button>
+              <button onClick={doSync}
+                style={{...btn(BG,G,{flex:'none',width:'auto',padding:'0 16px',
+                  border:`1.5px solid ${G}`,fontSize:13,boxShadow:'none'})}}>
+                {syncing?<Spinner/>:'🔄'}
+              </button>
+            </div>
+            <input style={{...inp(false),marginBottom:10}}
+              placeholder="Buscar placa, conductor, guarda, tipo..."
+              value={hq} onChange={e=>setHq(e.target.value)} maxLength={100}/>
+            <div style={{display:'flex',gap:6,marginBottom:10,overflowX:'auto',paddingBottom:4}}>
+              {['todas',...Object.keys(PC)].map(p=>(
+                <button key={p} onClick={()=>setHport(p)}
+                  style={{padding:'4px 10px',borderRadius:20,
+                    border:`1.5px solid ${hport===p?(p==='todas'?G:PC[p]?.color):BD}`,
+                    background:hport===p?'#e8f5e9':'transparent',
+                    color:hport===p?(p==='todas'?G:PC[p]?.color):TM,
+                    fontFamily:'Rajdhani,sans-serif',fontSize:10,fontWeight:700,
+                    cursor:'pointer',whiteSpace:'nowrap'}}>
+                  {p==='todas'?'TODAS':PC[p].icon+' '+p.replace('Portería ','').replace('Parqueadero ','P.')}
+                </button>
+              ))}
+            </div>
+            <div style={{display:'flex',gap:6,marginBottom:12}}>
+              {['todos','ingreso','salida'].map(m=>(
+                <button key={m} onClick={()=>setHmov(m)}
+                  style={{flex:1,padding:'7px',borderRadius:8,
+                    border:`1.5px solid ${hmov===m?(m==='ingreso'?'#16a34a':m==='salida'?DANGER:G):BD}`,
+                    background:hmov===m?(m==='ingreso'?SUCCESS_BG:m==='salida'?DANGER_BG:'#e8f5e9'):'transparent',
+                    color:hmov===m?(m==='ingreso'?'#16a34a':m==='salida'?DANGER:G):TM,
+                    fontFamily:'Rajdhani,sans-serif',fontSize:11,fontWeight:700,
+                    cursor:'pointer',textTransform:'uppercase'}}>
+                  {m==='todos'?'TODOS':m==='ingreso'?'⬆ INGRESO':'⬇ SALIDA'}
+                </button>
+              ))}
+            </div>
+            <div style={{fontSize:11,color:TM,marginBottom:12,fontFamily:'DM Sans,sans-serif'}}>
+              {filtR.length} registro{filtR.length!==1?'s':''}
+            </div>
+            {filtR.length===0
+              ?<div style={{textAlign:'center',padding:'50px 0',color:TM}}>
+                 <div style={{fontSize:48}}>📋</div>
+                 <div style={{fontFamily:'DM Sans,sans-serif',marginTop:10}}>Sin registros</div>
+               </div>
+              :filtR.map(r=><RecordCard key={r.id} r={r} onExit={doExit} hasExit={hasExit} showPort={true}/>)
+            }
+            <button onClick={doLogout}
+              style={btn('transparent',TM,{border:`1.5px solid ${BD}`,fontSize:14,boxShadow:'none',marginTop:12})}>
+              ← Cerrar Sesión
+            </button>
+          </div>
+        </div>
+      );
+
+      /* ══════════════════════════════════════════════════════════════
+         PANTALLA: GUARDA (app principal)
+      ══════════════════════════════════════════════════════════════ */
+      return (
+        <div style={{...wrap,paddingBottom:80}}>
+          {toast&&<Toast t={toast}/>}
+          <div style={{background:GHD,padding:'10px 16px',position:'sticky',top:0,zIndex:50}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <div>
+                <div style={{fontSize:10,color:'rgba(255,255,255,0.5)',letterSpacing:'0.12em',
+                  textTransform:'uppercase',fontFamily:'DM Sans,sans-serif'}}>Turno activo</div>
+                <div style={{fontSize:15,fontWeight:700,color:'white'}}>{pc.icon} {user.porteria}</div>
+              </div>
+              <div style={{textAlign:'right'}}>
+                <div style={{fontSize:14,fontWeight:700,color:'white',fontVariantNumeric:'tabular-nums'}}>
+                  {now.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}
+                </div>
+                <div style={{fontSize:11,color:'rgba(255,255,255,0.6)',fontFamily:'DM Sans,sans-serif'}}>
+                  {user.guard}
+                </div>
+              </div>
+            </div>
+          </div>
+          <SyncBar syncing={syncing} lastSync={lastSync} err={syncErr}/>
+          <div style={{display:'flex',background:BG,borderBottom:`1.5px solid ${BD}`,position:'sticky',top:53,zIndex:40}}>
+            {[['reg','📋 Registro'],['hist','📊 Historial'],['ladm','⚙️ Admin']].map(([k,l])=>(
+              <button key={k} onClick={()=>setTab(k)}
+                style={{flex:1,padding:'11px 0',background:'none',border:'none',
+                  borderBottom:`2.5px solid ${tab===k?pc.color:'transparent'}`,
+                  color:tab===k?pc.color:TM,fontFamily:'Rajdhani,sans-serif',
+                  fontSize:13,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',cursor:'pointer'}}>
+                {l}
+              </button>
+            ))}
+          </div>
+          <div style={{padding:'14px 16px'}}>
+
+            {/* ── REGISTRO ── */}
+            {tab==='reg' && <>
+              {/* Selector vehículo */}
+              <div style={card}>
+                <label style={lbl}>Tipo de vehículo *</label>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+                  {[['carro','🚗 Carro'],['moto','🏍 Moto']].map(([v,l])=>(
+                    <button key={v}
+                      onClick={()=>setForm(p=>({...p,vehiculo:v,placa:'',tipo:''}))}
+                      style={{padding:'14px 0',borderRadius:8,cursor:'pointer',fontFamily:'Rajdhani,sans-serif',
+                        fontSize:15,fontWeight:700,border:`2px solid ${form.vehiculo===v?pc.color:BD}`,
+                        background:form.vehiculo===v?'#e8f5e9':BG,color:form.vehiculo===v?pc.color:TM}}>
+                      {l}
+                    </button>
+                  ))}
+                </div>
+                {tried&&!form.vehiculo&&<FErr msg="Seleccione el tipo de vehículo"/>}
+              </div>
+
+              {/* Tipo persona */}
+              <div style={card}>
+                <label style={lbl}>Tipo de persona *</label>
+                <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+                  {pc.tipos.map(t=>(
+                    <button key={t} onClick={()=>setForm(p=>({...p,tipo:t}))}
+                      style={{padding:'9px 14px',borderRadius:20,cursor:'pointer',fontFamily:'Rajdhani,sans-serif',
+                        fontSize:12,fontWeight:700,letterSpacing:'0.06em',
+                        border:`1.5px solid ${form.tipo===t?TC[t]?.c||G:BD}`,
+                        background:form.tipo===t?(TC[t]?.bg||'#e8f5e9'):BG,
+                        color:form.tipo===t?(TC[t]?.c||G):TM}}>
+                      {t.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+                {tried&&!form.tipo&&<FErr msg="Seleccione el tipo de persona"/>}
+              </div>
+
+              {/* Búsqueda recurrentes */}
+              <div style={card}>
+                <label style={lbl}>Buscar vehículo recurrente</label>
+                <div style={{position:'relative'}}>
+                  <input style={inp(false)}
+                    placeholder="Escriba placa o nombre..."
+                    value={pQ}
+                    onChange={e=>{setPQ(e.target.value.toUpperCase());setDd(true);setForm(p=>({...p,placa:e.target.value.toUpperCase(),conductor:''}));}}
+                    onFocus={()=>setDd(true)}
+                    maxLength={40}/>
+                  {showDd && frv.length>0 && (
+                    <div style={{position:'absolute',top:'100%',left:0,right:0,
+                      background:BG,border:`1px solid ${BD}`,borderRadius:8,
+                      zIndex:100,maxHeight:200,overflowY:'auto',
+                      boxShadow:'0 4px 16px rgba(0,0,0,0.1)'}}>
+                      {frv.map(v=>(
+                        <div key={v.id} onClick={()=>pickRv(v)}
+                          style={{padding:'10px 14px',cursor:'pointer',borderBottom:`1px solid ${BD}`,
+                            display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                          <div>
+                            <div style={{fontWeight:700,letterSpacing:'0.1em'}}>{v.placa}</div>
+                            <div style={{fontSize:12,color:TM,fontFamily:'DM Sans,sans-serif'}}>{v.conductor}</div>
+                          </div>
+                          <div style={{display:'flex',gap:4}}>
+                            <Badge tipo={v.tipo}/>
+                            <BadgeVeh vehiculo={v.vehiculo}/>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Placa */}
+              <div style={card}>
+                <label style={lbl}>Placa del vehículo *</label>
+                <input style={{...inp(tried&&!sanitizePlaca(form.placa)),
+                  textTransform:'uppercase',fontWeight:700,letterSpacing:'0.12em',fontSize:22}}
+                  placeholder={form.vehiculo==='moto'?'ABC92C':form.vehiculo==='carro'?'ABC123':'ABC123 / ABC92C'}
+                  value={form.placa} maxLength={6}
+                  onChange={e=>{
+                    const p=sanitizePlaca(e.target.value);
+                    setForm(f=>({...f,placa:p}));
+                    setPQ(p); setDd(true);
+                  }}/>
+                {tried&&!sanitizePlaca(form.placa)&&<FErr msg="Ingrese la placa"/>}
+                {tried&&sanitizePlaca(form.placa)&&!validarPlaca(sanitizePlaca(form.placa),form.vehiculo)&&
+                  <FErr msg={form.vehiculo==='moto'?'Placa moto inválida (ej: ABC92C)':'Placa carro inválida (ej: ABC123)'}/>}
+              </div>
+
+              {/* Conductor */}
+              <div style={card}>
+                <label style={lbl}>Nombre del conductor *</label>
+                <input style={inp(tried&&!form.conductor.trim())}
+                  placeholder="Nombre completo"
+                  value={form.conductor} maxLength={120}
+                  onChange={e=>setForm(p=>({...p,conductor:e.target.value}))}/>
+                {tried&&!form.conductor.trim()&&<FErr msg="Ingrese el nombre del conductor"/>}
+              </div>
+
+              {/* Visita a (visitantes/contratistas) */}
+              {isV && (
+                <div style={card}>
+                  <label style={lbl}>Visita a *</label>
+                  <input style={inp(tried&&isV&&!form.visitaA.trim())}
+                    placeholder="Nombre de la persona que visita"
+                    value={form.visitaA} maxLength={120}
+                    onChange={e=>setForm(p=>({...p,visitaA:e.target.value}))}/>
+                  {tried&&!form.visitaA.trim()&&<FErr msg="Requerido para visitantes y contratistas"/>}
+                </div>
+              )}
+
+              {/* Observaciones */}
+              <div style={card}>
+                <label style={lbl}>
+                  Observaciones{' '}
+                  <span style={{color:TM,fontWeight:400,textTransform:'none',letterSpacing:0}}>(opcional)</span>
+                </label>
+                <textarea style={{...inp(false),resize:'none',minHeight:76,lineHeight:1.6}}
+                  placeholder="Anote cualquier observación relevante..."
+                  value={form.obs} maxLength={500}
+                  onChange={e=>setForm(p=>({...p,obs:e.target.value}))}/>
+                <div style={{textAlign:'right',fontSize:10,color:TM,marginTop:3,fontFamily:'DM Sans,sans-serif'}}>
+                  {form.obs.length}/500
+                </div>
+              </div>
+
+              <button onClick={doSubmit} disabled={saving}
+                style={btn(G,'white',{fontSize:18,padding:17,marginBottom:10,letterSpacing:'0.1em',
+                  boxShadow:'0 4px 12px rgba(26,107,30,0.3)',opacity:saving?0.75:1,
+                  display:'flex',alignItems:'center',justifyContent:'center',gap:10})}>
+                {saving&&<Spinner/>}
+                {saving?'Guardando...':'⬆ REGISTRAR INGRESO'}
+              </button>
+              <button onClick={resetForm}
+                style={btn('transparent',TM,{fontSize:12,padding:8,border:'none',boxShadow:'none'})}>
+                ↺ Limpiar formulario
+              </button>
+            </>}
+
+            {/* ── HISTORIAL ── */}
+            {tab==='hist' && <>
+              <div style={{...card,padding:'10px 12px',marginBottom:12,
+                background:SUCCESS_BG,border:'1px solid #86efac'}}>
+                <div style={{fontSize:12,color:SUCCESS,fontFamily:'DM Sans,sans-serif'}}>
+                  📍 Registros de: <strong>{user.porteria}</strong>
+                </div>
+              </div>
+              <div style={{display:'flex',gap:8,marginBottom:12}}>
+                <input style={{...inp(false),flex:1}}
+                  placeholder="Buscar placa, conductor..." value={hq}
+                  onChange={e=>setHq(e.target.value)} maxLength={100}/>
+                <button onClick={doSync}
+                  style={{...btn(BG,G,{flex:'none',width:'auto',padding:'0 14px',
+                    border:`1.5px solid ${G}`,fontSize:18,boxShadow:'none'})}}>
+                  {syncing?<Spinner/>:'🔄'}
+                </button>
+              </div>
+              <div style={{display:'flex',gap:6,marginBottom:12}}>
+                {['todos','ingreso','salida'].map(m=>(
+                  <button key={m} onClick={()=>setHmov(m)}
+                    style={{flex:1,padding:'7px',borderRadius:8,
+                      border:`1.5px solid ${hmov===m?(m==='ingreso'?'#16a34a':m==='salida'?DANGER:G):BD}`,
+                      background:hmov===m?(m==='ingreso'?SUCCESS_BG:m==='salida'?DANGER_BG:'#e8f5e9'):'transparent',
+                      color:hmov===m?(m==='ingreso'?'#16a34a':m==='salida'?DANGER:G):TM,
+                      fontFamily:'Rajdhani,sans-serif',fontSize:11,fontWeight:700,
+                      cursor:'pointer',textTransform:'uppercase'}}>
+                    {m==='todos'?'TODOS':m==='ingreso'?'⬆ ING':'⬇ SAL'}
+                  </button>
+                ))}
+              </div>
+              <div style={{fontSize:11,color:TM,marginBottom:12,fontFamily:'DM Sans,sans-serif'}}>
+                {filtR.length} registro{filtR.length!==1?'s':''}
+              </div>
+              {filtR.length===0
+                ?<div style={{textAlign:'center',padding:'50px 0',color:TM}}>
+                   <div style={{fontSize:48}}>📋</div>
+                   <div style={{fontFamily:'DM Sans,sans-serif',marginTop:10}}>Sin registros</div>
+                 </div>
+                :filtR.map(r=><RecordCard key={r.id} r={r} onExit={doExit} hasExit={hasExit} showPort={false}/>)
+              }
+            </>}
+
+            {/* ── ADMIN LOCAL (GUARDA) ── */}
+            {tab==='ladm' && <>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:14}}>
+                {[
+                  ['Esta portería',records.filter(r=>r.porteria===user.porteria).length,pc.color],
+                  ['Recurrentes',rvc,GM],
+                  ['Ingresos hoy',records.filter(r=>r.movimiento==='ingreso'&&r.porteria===user.porteria&&(r.ts||'').slice(0,10)===nowISO().slice(0,10)).length,'#16a34a'],
+                  ['Salidas hoy', records.filter(r=>r.movimiento==='salida'&&r.porteria===user.porteria&&(r.ts||'').slice(0,10)===nowISO().slice(0,10)).length,DANGER],
+                ].map(([l,v,c])=>(
+                  <div key={l} style={{background:BG,borderRadius:10,padding:'14px 12px',
+                    textAlign:'center',border:`1.5px solid ${c}25`,boxShadow:'0 1px 4px rgba(0,0,0,0.06)'}}>
+                    <div style={{fontSize:32,fontWeight:700,color:c,lineHeight:1}}>{v}</div>
+                    <div style={{fontSize:11,color:TM,fontFamily:'DM Sans,sans-serif',marginTop:4}}>{l}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={card}>
+                <div style={{fontSize:15,fontWeight:700,marginBottom:14,color:pc.color}}>
+                  ⭐ Agregar Vehículo Recurrente
+                </div>
+                <FormRecurrente
+                  tiposDisponibles={pc.rt}
+                  rvList={rvList}
+                  onAdd={(nrv,cb)=>doAddRvGeneric(nrv,cb,pc.rt)}
+                  onImport={null}
+                  importRef={null}
+                  color={pc.color}/>
+              </div>
+
+              {rvList.filter(v=>pc.rt.includes(v.tipo)).map(v=>(
+                <div key={v.id} style={{...card,display:'flex',justifyContent:'space-between',
+                  alignItems:'center',marginBottom:8}}>
+                  <div>
+                    <div style={{fontWeight:700,letterSpacing:'0.1em',fontSize:18}}>{v.placa}</div>
+                    <div style={{fontSize:13,color:TM,fontFamily:'DM Sans,sans-serif',marginBottom:5}}>
+                      {v.conductor}
+                    </div>
+                    <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+                      <Badge tipo={v.tipo}/>
+                      {v.vehiculo&&<BadgeVeh vehiculo={v.vehiculo}/>}
+                    </div>
+                  </div>
+                  <button onClick={()=>doDelRv(v.id)}
+                    style={{background:DANGER_BG,color:DANGER,border:'1px solid #fca5a5',
+                      borderRadius:8,padding:'8px 14px',cursor:'pointer',
+                      fontFamily:'Rajdhani,sans-serif',fontWeight:700,fontSize:16}}>✕</button>
+                </div>
+              ))}
+              <button onClick={doLogout}
+                style={btn('transparent',TM,{border:`1.5px solid ${BD}`,marginTop:16,fontSize:14,boxShadow:'none'})}>
+                ← Cerrar Sesión / Cambiar Portería
+              </button>
+            </>}
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  </script>
+
+  <script>
+    if('serviceWorker' in navigator){
+      window.addEventListener('load',()=>{
+        navigator.serviceWorker.register('./sw.js')
+          .then(r=>console.log('SW registrado:',r.scope))
+          .catch(e=>console.warn('SW no disponible:',e));
+      });
+    }
+  </script>
+</body>
+</html>
